@@ -1,0 +1,243 @@
+@import './variables.css';
+@import './animations.css';
+
+/* CSS Reset & Global Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-darkest);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(0, 245, 212, 0.05), transparent),
+    radial-gradient(ellipse 60% 40% at 85% 90%, rgba(99, 102, 241, 0.05), transparent);
+  background-attachment: fixed;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Minimalist Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyan-bright);
+}
+
+/* Typography & Monospace Helpers */
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em;
+}
+
+/* Interactive Focus Indicators */
+button, input, select, textarea, [tabindex="0"] {
+  outline: none;
+  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+/* Utility Cards & Panels */
+.panel-glass {
+  background: var(--bg-surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.panel-glass:hover {
+  border-color: var(--border-medium);
+}
+
+.panel-elevated {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.panel-elevated:hover {
+  border-color: var(--border-medium);
+}
+
+/* Protocol Badges */
+.badge-protocol {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  font-size: 0.675rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  border-radius: var(--radius-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-dns {
+  background: rgba(192, 132, 252, 0.12);
+  color: var(--violet-bright);
+  border: 1px solid rgba(192, 132, 252, 0.28);
+}
+
+.badge-tcp {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--blue-ice);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+.badge-tls {
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+}
+
+.badge-http {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--emerald-success);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.badge-sql {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--amber-warning);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+}
+
+.badge-arp {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.badge-error {
+  background: rgba(244, 63, 94, 0.14);
+  color: var(--coral-error);
+  border: 1px solid rgba(244, 63, 94, 0.32);
+}
+
+/* Minimalist Button Styles */
+.btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #00f5d4 100%);
+  color: #06080d;
+  border: 1px solid rgba(0, 245, 212, 0.6);
+  box-shadow: 0 0 16px rgba(0, 245, 212, 0.2);
+  cursor: pointer;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgba(0, 245, 212, 0.45);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-md);
+  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-active);
+  color: #ffffff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-subtle);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 180ms ease-out forwards;
+}

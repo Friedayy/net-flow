@@ -1,0 +1,99 @@
+/* NetFlow Motion & SVG Animations */
+
+@keyframes pulseGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px var(--cyan-bright));
+    opacity: 0.9;
+  }
+  50% {
+    filter: drop-shadow(0 0 16px var(--cyan-bright));
+    opacity: 1;
+  }
+}
+
+@keyframes pulseError {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px var(--coral-error));
+    opacity: 0.85;
+  }
+  50% {
+    filter: drop-shadow(0 0 20px var(--coral-error));
+    opacity: 1;
+  }
+}
+
+@keyframes dashFlow {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes packetFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.active-link-forward {
+  stroke-dasharray: 8 6;
+  animation: dashFlow 1s linear infinite;
+  stroke: var(--cyan-bright) !important;
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 0 6px var(--cyan-bright));
+}
+
+.active-link-reverse {
+  stroke-dasharray: 8 6;
+  animation: dashFlow 1s linear infinite reverse;
+  stroke: var(--emerald-success) !important;
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 0 6px var(--emerald-success));
+}
+
+.active-link-dropped {
+  stroke-dasharray: 4 4;
+  animation: dashFlow 0.5s linear infinite;
+  stroke: var(--coral-error) !important;
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 0 8px var(--coral-error));
+}
+
+.node-active-pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.node-error-pulse {
+  animation: pulseError 1.5s ease-in-out infinite;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .active-link-forward,
+  .active-link-reverse,
+  .active-link-dropped {
+    animation: none !important;
+  }
+}
