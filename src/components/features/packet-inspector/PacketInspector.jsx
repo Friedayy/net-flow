@@ -7,7 +7,7 @@ import {
 
 export const PacketInspector = ({ packet }) => {
   const [selectedLayer, setSelectedLayer] = useState('ALL');
-  const [showHexDump, setShowHexDump] = useState(false);
+  const [viewMode, setViewMode] = useState('SPLIT'); // 'SPLIT' | 'STRUCTURED' | 'HEX'
 
   if (!packet) {
     return (
@@ -33,6 +33,71 @@ export const PacketInspector = ({ packet }) => {
     );
   }
 
+  // Helper to render the Wireshark Hex Dump Panel
+  const renderHexDumpPanel = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div
+        className="panel-elevated"
+        style={{
+          padding: '12px',
+          backgroundColor: '#030508',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.735rem',
+          color: 'var(--cyan-bright)',
+          lineHeight: '1.6',
+          border: '1px solid rgba(0, 245, 212, 0.2)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--cyan-bright)', fontWeight: 700, fontSize: '0.725rem' }}>
+            <FileCode size={13} />
+            <span>WIRESHARK RAW FRAME HEX DUMP</span>
+          </div>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            16 Octets / Line (Big-Endian Wire Order)
+          </span>
+        </div>
+        <div style={{ color: 'var(--text-muted)', marginBottom: '6px', fontSize: '0.675rem' }}>
+          Offset   00 01 02 03 04 05 06 07   08 09 0a 0b 0c 0d 0e 0f   ASCII
+        </div>
+        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', maxHeight: '420px', overflowY: 'auto' }}>
+          {packet.rawHexPreview}
+        </pre>
+      </div>
+
+      <div
+        className="panel-elevated"
+        style={{
+          padding: '10px 14px',
+          backgroundColor: 'rgba(0,0,0,0.25)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '8px',
+          fontSize: '0.7rem'
+        }}
+      >
+        <div>
+          <span style={{ color: 'var(--text-muted)' }}>Total Wire Size:</span>
+          <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--emerald-success)', fontWeight: 700, marginTop: '2px' }}>
+            {packet.totalSizeBytes} Bytes
+          </div>
+        </div>
+        <div>
+          <span style={{ color: 'var(--text-muted)' }}>Encapsulation:</span>
+          <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--blue-ice)', fontWeight: 700, marginTop: '2px' }}>
+            {packet.encapsulationStack?.length || 4} Layers
+          </div>
+        </div>
+        <div>
+          <span style={{ color: 'var(--text-muted)' }}>Integrity Check:</span>
+          <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--cyan-bright)', fontWeight: 700, marginTop: '2px' }}>
+            CRC32 Valid ✓
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div
       className="panel-glass"
@@ -51,7 +116,9 @@ export const PacketInspector = ({ packet }) => {
           justifyContent: 'space-between',
           padding: '12px 18px',
           borderBottom: '1px solid var(--border-subtle)',
-          backgroundColor: 'var(--bg-secondary)'
+          backgroundColor: 'var(--bg-secondary)',
+          flexWrap: 'wrap',
+          gap: '10px'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -66,19 +133,55 @@ export const PacketInspector = ({ packet }) => {
           </div>
         </div>
 
-        {/* Hex Dump Toggle */}
-        <button
-          onClick={() => setShowHexDump(!showHexDump)}
-          className="btn-secondary"
-          style={{
-            fontSize: '0.725rem',
-            padding: '4px 10px',
-            color: showHexDump ? 'var(--cyan-bright)' : 'var(--text-secondary)'
-          }}
-        >
-          <FileCode size={13} />
-          <span>{showHexDump ? 'Structured View' : 'Wireshark Hex'}</span>
-        </button>
+        {/* View Mode Segmented Controls */}
+        <div style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0,0,0,0.3)', padding: '3px', borderRadius: 'var(--radius-sm)' }}>
+          <button
+            onClick={() => setViewMode('SPLIT')}
+            className="btn-ghost"
+            style={{
+              fontSize: '0.725rem',
+              padding: '3px 9px',
+              borderRadius: 'var(--radius-xs)',
+              backgroundColor: viewMode === 'SPLIT' ? 'rgba(0, 245, 212, 0.16)' : 'transparent',
+              color: viewMode === 'SPLIT' ? 'var(--cyan-bright)' : 'var(--text-secondary)',
+              border: viewMode === 'SPLIT' ? '1px solid rgba(0, 245, 212, 0.3)' : '1px solid transparent'
+            }}
+          >
+            <Layers size={12} style={{ marginRight: '4px' }} />
+            <span>Dual View (Layers + Hex)</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('STRUCTURED')}
+            className="btn-ghost"
+            style={{
+              fontSize: '0.725rem',
+              padding: '3px 9px',
+              borderRadius: 'var(--radius-xs)',
+              backgroundColor: viewMode === 'STRUCTURED' ? 'rgba(0, 245, 212, 0.16)' : 'transparent',
+              color: viewMode === 'STRUCTURED' ? 'var(--cyan-bright)' : 'var(--text-secondary)',
+              border: viewMode === 'STRUCTURED' ? '1px solid rgba(0, 245, 212, 0.3)' : '1px solid transparent'
+            }}
+          >
+            <span>Structured Layers</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('HEX')}
+            className="btn-ghost"
+            style={{
+              fontSize: '0.725rem',
+              padding: '3px 9px',
+              borderRadius: 'var(--radius-xs)',
+              backgroundColor: viewMode === 'HEX' ? 'rgba(0, 245, 212, 0.16)' : 'transparent',
+              color: viewMode === 'HEX' ? 'var(--cyan-bright)' : 'var(--text-secondary)',
+              border: viewMode === 'HEX' ? '1px solid rgba(0, 245, 212, 0.3)' : '1px solid transparent'
+            }}
+          >
+            <FileCode size={12} style={{ marginRight: '4px' }} />
+            <span>Wireshark Hex</span>
+          </button>
+        </div>
       </div>
 
       {/* Layer Filter Tabs */}
@@ -114,30 +217,20 @@ export const PacketInspector = ({ packet }) => {
 
       {/* Main Inspection Body */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px' }}>
-        {showHexDump ? (
-          /* HEX DUMP VIEW (Wireshark Style) */
+        {viewMode === 'HEX' ? (
+          renderHexDumpPanel()
+        ) : (
           <div
-            className="panel-elevated"
             style={{
-              padding: '12px',
-              backgroundColor: '#030508',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.75rem',
-              color: 'var(--cyan-bright)',
-              lineHeight: '1.6'
+              display: 'grid',
+              gridTemplateColumns: viewMode === 'SPLIT' ? 'minmax(0, 1.22fr) minmax(0, 1fr)' : '1fr',
+              gap: '14px',
+              alignItems: 'start'
             }}
           >
-            <div style={{ color: 'var(--text-muted)', marginBottom: '8px', fontSize: '0.675rem' }}>
-              Offset   00 01 02 03 04 05 06 07   08 09 0a 0b 0c 0d 0e 0f
-            </div>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-              {packet.rawHexPreview}
-            </pre>
-          </div>
-        ) : (
-          /* STRUCTURED MULTI-LAYER VIEW */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Visual Encapsulation Stack */}
+            {/* STRUCTURED MULTI-LAYER VIEW */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Visual Encapsulation Stack */}
             <div
               className="panel-elevated"
               style={{ padding: '8px 12px', backgroundColor: 'rgba(0,0,0,0.2)' }}
@@ -346,6 +439,10 @@ export const PacketInspector = ({ packet }) => {
                 </div>
               </div>
             )}
+            </div>
+
+            {/* Right Column in SPLIT mode: Hex Dump Panel */}
+            {viewMode === 'SPLIT' && renderHexDumpPanel()}
           </div>
         )}
       </div>

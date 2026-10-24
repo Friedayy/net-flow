@@ -36,6 +36,7 @@ export function generateSimulationEvents(config) {
     const failure = config.failureType;
     const isIpv6 = config.ipVersion === 'IPv6';
     const latencyMult = config.latencyMultiplier || 1.0;
+    const httpMethod = config.httpMethod || 'GET';
     // Addressing models
     const clientMac = '02:42:c0:a8:01:69';
     const switchMac1 = '00:1c:73:44:aa:01';
@@ -127,7 +128,7 @@ export function generateSimulationEvents(config) {
             data: {
                 type: 'REQUEST',
                 httpVersion: config.httpVersion === 'HTTP/3 (QUIC)' ? 'HTTP/3' : 'HTTP/1.1',
-                method: config.httpMethod,
+                method: httpMethod,
                 url: config.targetUrl,
                 path: parsed.pathname + parsed.search,
                 headers: {
@@ -699,7 +700,7 @@ export function generateSimulationEvents(config) {
             data: {
                 type: 'REQUEST',
                 httpVersion: config.httpVersion === 'HTTP/3 (QUIC)' ? 'HTTP/3' : 'HTTP/1.1',
-                method: config.httpMethod,
+                method: httpMethod,
                 path: parsed.pathname + parsed.search,
                 headers: {
                     'Host': parsed.hostname,
@@ -717,8 +718,8 @@ export function generateSimulationEvents(config) {
         protocol: config.httpVersion === 'HTTP/3 (QUIC)' ? 'HTTP/3 (QUIC)' : 'HTTP/1.1',
         sourceNodeId: 'client',
         destNodeId: 'edge_server',
-        title: `HTTP Request Transmitted: ${config.httpMethod} ${parsed.pathname}`,
-        summarySimple: `Client sends encrypted HTTP request: "${config.httpMethod} ${parsed.pathname}". Network observers see only encrypted bytes.`,
+        title: `HTTP Request Transmitted: ${httpMethod} ${parsed.pathname}`,
+        summarySimple: `Client sends encrypted HTTP request: "${httpMethod} ${parsed.pathname}". Network observers see only encrypted bytes.`,
         summaryTechnical: `TLS Application Data Record transmitted. Layer 7 ciphertext containing HTTP/1.1 GET request line, host header, and accept parameters.`,
         whyItHappens: 'The client requests the specific resource path from the web server over the established secure tunnel.',
         whatHappensNext: 'The edge reverse proxy terminates TLS and forwards the request to the origin web server.',
@@ -744,7 +745,7 @@ export function generateSimulationEvents(config) {
             data: {
                 type: 'REQUEST',
                 httpVersion: 'HTTP/1.1',
-                method: config.httpMethod,
+                method: httpMethod,
                 path: parsed.pathname + parsed.search,
                 headers: {
                     'Host': parsed.hostname,

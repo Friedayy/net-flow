@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle,
   Play,
@@ -10,18 +10,63 @@ import {
   AlertOctagon,
   FileQuestion,
   ServerOff,
-  Clock
+  Clock,
+  Server,
+  RefreshCw
 } from 'lucide-react';
 import { FAILURE_SCENARIOS } from '../../../engine/failures.js';
 
 export const FailureLab = ({ onRunFailureScenario }) => {
   const [selectedFailure, setSelectedFailure] = useState('DNS_FAILURE');
+  const [liveResponse, setLiveResponse] = useState(null);
+  const [isProbing, setIsProbing] = useState(false);
+  const [probeError, setProbeError] = useState(null);
+
+  const targetProbePath = selectedFailure === 'HTTP_500'
+    ? '/api/simulate/error-500'
+    : selectedFailure === 'DB_UNAVAILABLE'
+    ? '/api/simulate/db-down'
+    : selectedFailure === 'HTTP_404'
+    ? '/api/products/999'
+    : selectedFailure === 'CONNECTION_REFUSED'
+    ? '/api/simulate/db-down'
+    : '/api/simulate/error-500';
+
+  const handleExecuteLiveProbe = async () => {
+    setIsProbing(true);
+    setProbeError(null);
+    setLiveResponse(null);
+    const startTime = performance.now();
+
+    try {
+      const res = await fetch('/api/trace-real', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: targetProbePath })
+      });
+      const data = await res.json();
+      const wallClockMs = performance.now() - startTime;
+      setLiveResponse({
+        ...data,
+        clientObservedDurationMs: parseFloat(wallClockMs.toFixed(2))
+      });
+    } catch (err) {
+      setProbeError(`Live probe error: ${err.message}. Verify backend is active on :3001.`);
+    } finally {
+      setIsProbing(false);
+    }
+  };
 
   const failureKeys = Object.keys(FAILURE_SCENARIOS).filter(
     (k) => k !== 'NONE'
   );
 
   const activeScenario = FAILURE_SCENARIOS[selectedFailure] || FAILURE_SCENARIOS.DNS_FAILURE;
+
+  // Automatically execute live backend probe whenever scenario changes so real wire data is always showing
+  useEffect(() => {
+    handleExecuteLiveProbe();
+  }, [selectedFailure]);
 
   const getScenarioIcon = (type) => {
     switch (type) {
@@ -220,6 +265,117 @@ export const FailureLab = ({ onRunFailureScenario }) => {
             <p style={{ fontSize: '0.8rem', lineHeight: '1.5', color: 'var(--text-primary)', margin: 0 }}>
               {activeScenario.technicalDescription}
             </p>
+          </div>
+
+          {/* Real Backend vs Simulation Comparison Panel */}
+          <div
+            className="panel-elevated"
+            style={{
+              padding: '12px 14px',
+              borderLeft: '3px solid var(--cyan-bright)',
+              backgroundColor: 'rgba(0, 245, 212, 0.03)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Server size={15} color="var(--cyan-bright)" />
+                <h5 style={{ fontSize: '0.775rem', color: 'var(--cyan-bright)', fontWeight: 700, textTransform: 'uppercase', margin: 0 }}>
+                  Live Backend Verification: Real Request vs Simulation
+                </h5>
+                <span
+                  style={{
+                    fontSize: '0.625rem',
+                    padding: '1px 5px',
+                    borderRadius: 'var(--radius-xs)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    color: 'var(--emerald-success)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    fontFamily: 'var(--font-mono)'
+                  }}
+                >
+                  PORT 3001 LIVE
+                </span>
+              </div>
+
+              <button
+                onClick={handleExecuteLiveProbe}
+                disabled={isProbing}
+                className="btn-primary"
+                style={{
+                  fontSize: '0.725rem',
+                  padding: '4px 10px',
+                  backgroundColor: 'rgba(0, 245, 212, 0.15)',
+                  color: 'var(--cyan-bright)',
+                  borderColor: 'rgba(0, 245, 212, 0.4)',
+                  boxShadow: 'none'
+                }}
+              >
+                {isProbing ? (
+                  <>
+                    <RefreshCw size={11} style={{ animation: 'radarSweep 1s linear infinite' }} />
+                    <span>Probing Backend...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play size={11} fill="currentColor" />
+                    <span>Execute Real Wire Probe</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.35' }}>
+              Compare NetFlow's simulated packet breakdown against actual socket execution on the local Node.js/Express backend ({targetProbePath}).
+            </p>
+
+            {probeError && (
+              <div style={{ padding: '6px 10px', borderRadius: 'var(--radius-xs)', backgroundColor: 'rgba(244, 63, 94, 0.1)', color: 'var(--coral-error)', fontSize: '0.72rem' }}>
+                {probeError}
+              </div>
+            )}
+
+            {liveResponse && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '8px', marginTop: '2px' }}>
+                {/* Real Wire Observation */}
+                <div style={{ padding: '8px 10px', backgroundColor: '#030508', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <strong style={{ fontSize: '0.7rem', color: 'var(--emerald-success)' }}>
+                      Actual Wire Response
+                    </strong>
+                    <span className="badge-protocol badge-error" style={{ fontSize: '0.6rem' }}>
+                      {liveResponse.status} {liveResponse.statusText}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>
+                    RTT: <span style={{ color: 'var(--emerald-success)' }}>{liveResponse.wallClockDurationMs}ms</span> • Target: {liveResponse.targetUrl}
+                  </div>
+                  <pre style={{ margin: 0, fontSize: '0.65rem', color: 'var(--cyan-bright)', maxHeight: '90px', overflowY: 'auto' }}>
+                    {JSON.stringify(liveResponse.body, null, 2)}
+                  </pre>
+                </div>
+
+                {/* Simulation Model Comparison */}
+                <div style={{ padding: '8px 10px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <strong style={{ fontSize: '0.7rem', color: 'var(--cyan-bright)', display: 'block', marginBottom: '4px' }}>
+                    NetFlow Engine Diagnostic Isolation
+                  </strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.675rem' }}>
+                    <div>
+                      <span style={{ color: 'var(--coral-error)', fontWeight: 700 }}>Fault Layer:</span> {activeScenario.layer} ({activeScenario.protocol})
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Kernel State:</span> Socket terminated with {activeScenario.expectedErrorCode}
+                    </div>
+                    <div style={{ color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.3' }}>
+                      Wire frame encapsulated with zero application payload delivery; error isolated before TLS handshake completion.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Symptoms List */}

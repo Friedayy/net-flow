@@ -282,8 +282,8 @@ export const App = () => {
         )}
 
         {activeView === 'inspector' && (
-          <div style={{ height: '620px' }}>
-            <PacketInspector packet={derived.currentEvent?.packet || null} />
+          <div style={{ minHeight: '680px', display: 'flex', flexDirection: 'column' }}>
+            <PacketInspector packet={derived.currentEvent?.packet || events.find(e => e.packet)?.packet || null} />
           </div>
         )}
 
